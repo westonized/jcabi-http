@@ -138,9 +138,7 @@ public abstract class AbstractHeaderBasedCachingWire implements Wire {
     }
 
     /**
-     * Check response and update cache if needed.
-     * @todo #90:30min Evict cache entry if If-Modified-Since request responded
-     *  with HTTP_OK code and no Last-Modified header.
+     * Check response and update cache or evict from cache if needed.
      * @param req Request
      * @param home URI to fetch
      * @param method HTTP method
@@ -173,13 +171,17 @@ public abstract class AbstractHeaderBasedCachingWire implements Wire {
     }
 
     /**
-     * Add response to cache.
+     * Add response to cache,
+     * Update response in cache or
+     * Evict response from cache.
      * @param req The request to be used as key
      * @param rsp The response to add
      */
     private void updateCache(final Request req, final Response rsp) {
         if (rsp.headers().containsKey(this.scvh)) {
             this.cache.put(req, rsp);
+        } else {
+            this.cache.remove(req);
         }
     }
 
