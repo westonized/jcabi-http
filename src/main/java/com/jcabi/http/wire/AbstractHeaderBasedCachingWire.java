@@ -76,7 +76,7 @@ public abstract class AbstractHeaderBasedCachingWire implements Wire {
      * @param wire Original wire
      */
     AbstractHeaderBasedCachingWire(
-            final String scvh, final String cmch, final Wire wire
+        final String scvh, final String cmch, final Wire wire
     ) {
         this.scvh = scvh;
         this.cmch = cmch;
@@ -87,18 +87,18 @@ public abstract class AbstractHeaderBasedCachingWire implements Wire {
     // @checkstyle ParameterNumber (3 lines)
     @Override
     public final Response send(
-            final Request req, final String home, final String method,
-            final Collection<Map.Entry<String, String>> headers,
-            final InputStream content, final int connect, final int read
+        final Request req, final String home, final String method,
+        final Collection<Map.Entry<String, String>> headers,
+        final InputStream content, final int connect, final int read
     ) throws IOException {
         final Response rsp;
         if (method.equals(Request.GET) && !this.requestHasCmcHeader(headers)) {
             rsp = this.consultCache(
-                    req, home, method, headers, content, connect, read
+                req, home, method, headers, content, connect, read
             );
         } else {
             rsp = this.origin.send(
-                    req, home, method, headers, content, connect, read
+                req, home, method, headers, content, connect, read
             );
         }
         return rsp;
@@ -119,18 +119,18 @@ public abstract class AbstractHeaderBasedCachingWire implements Wire {
      * @checkstyle ParameterNumber (6 lines)
      */
     private Response consultCache(
-            final Request req, final String home, final String method,
-            final Collection<Map.Entry<String, String>> headers,
-            final InputStream content, final int connect, final int read
+        final Request req, final String home, final String method,
+        final Collection<Map.Entry<String, String>> headers,
+        final InputStream content, final int connect, final int read
     ) throws IOException {
         final Response rsp;
         if (this.cache.containsKey(req)) {
             rsp = this.validateCacheWithServer(
-                    req, home, method, headers, content, connect, read
+                req, home, method, headers, content, connect, read
             );
         } else {
             rsp = this.origin.send(
-                    req, home, method, headers, content, connect, read
+                req, home, method, headers, content, connect, read
             );
             this.updateCache(req, rsp);
         }
@@ -139,7 +139,7 @@ public abstract class AbstractHeaderBasedCachingWire implements Wire {
 
     /**
      * Check response and update cache if needed.
-     * Evict cache entry if If-Modified-Since request responded
+     * @todo #90:30min Evict cache entry if If-Modified-Since request responded
      *  with HTTP_OK code and no Last-Modified header.
      * @param req Request
      * @param home URI to fetch
@@ -153,16 +153,16 @@ public abstract class AbstractHeaderBasedCachingWire implements Wire {
      * @checkstyle ParameterNumber (8 lines)
      */
     private Response validateCacheWithServer(
-            final Request req, final String home, final String method,
-            final Collection<Map.Entry<String, String>> headers,
-            final InputStream content, final int connect, final int read
+        final Request req, final String home, final String method,
+        final Collection<Map.Entry<String, String>> headers,
+        final InputStream content, final int connect, final int read
     ) throws IOException {
         final Response cached = this.cache.get(req);
         final Collection<Map.Entry<String, String>> hdrs = this.enrich(
-                headers, cached
+            headers, cached
         );
         Response result = this.origin.send(
-                req, home, method, hdrs, content, connect, read
+            req, home, method, hdrs, content, connect, read
         );
         if (result.status() == HttpURLConnection.HTTP_NOT_MODIFIED) {
             result = cached;
@@ -180,8 +180,6 @@ public abstract class AbstractHeaderBasedCachingWire implements Wire {
     private void updateCache(final Request req, final Response rsp) {
         if (rsp.headers().containsKey(this.scvh)) {
             this.cache.put(req, rsp);
-        } else {
-            this.cache.remove(req);
         }
     }
 
@@ -193,29 +191,28 @@ public abstract class AbstractHeaderBasedCachingWire implements Wire {
      * @return Map with extra header
      */
     private Collection<Map.Entry<String, String>> enrich(
-            final Collection<Map.Entry<String, String>> headers, final Response rsp
+        final Collection<Map.Entry<String, String>> headers, final Response rsp
     ) {
         final Collection<String> list = rsp.headers().get(
-                this.scvh
+            this.scvh
         );
         final Map<String, String> map =
-                new ConcurrentHashMap<>(headers.size() + 1);
+            new ConcurrentHashMap<>(headers.size() + 1);
         for (final Map.Entry<String, String> entry : headers) {
             map.put(entry.getKey(), entry.getValue());
         }
         map.put(
-                this.cmch, list.iterator().next()
+            this.cmch, list.iterator().next()
         );
         return map.entrySet();
     }
-
     /**
      * Check if the request send through this Wire has the cmch header.
      * @param headers The headers of the request.
      * @return True if the request contains the cmch header, false otherwise.
      */
     private boolean requestHasCmcHeader(
-            final Collection<Map.Entry<String, String>> headers
+        final Collection<Map.Entry<String, String>> headers
     ) {
         boolean requestHasCmch = false;
         for (final Map.Entry<String, String> header : headers) {
