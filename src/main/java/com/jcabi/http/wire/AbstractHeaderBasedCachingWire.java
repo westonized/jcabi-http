@@ -32,7 +32,6 @@ package com.jcabi.http.wire;
 import com.jcabi.http.Request;
 import com.jcabi.http.Response;
 import com.jcabi.http.Wire;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
