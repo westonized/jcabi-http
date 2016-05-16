@@ -73,12 +73,6 @@ public final class LastModifiedCachingWireTest {
     private static final String BODY_UPDATED_2 = "Test body updated 2";
 
     /**
-     * A Matcher that tests for the presence of the If-Modified-Since header.
-     */
-    private final Matcher<MkQuery> queryContainsIfModifiedSinceHeader =
-        queryContainingHeader("If-Modified-Since");
-
-    /**
      * LastModifiedCachingWire can handle requests without headers.
      * @throws Exception If fails
      */
@@ -153,20 +147,19 @@ public final class LastModifiedCachingWireTest {
     @Test
     public void doesNotCacheGetRequestIfTheLastModifiedHeaderIsMissing()
         throws Exception {
-        final Map<String, String> lastModifiedHeaders =
-            Collections.singletonMap(
+        final Map<String, String> headers = Collections.singletonMap(
                 HttpHeaders.LAST_MODIFIED,
                 "Wed, 15 Nov 1995 05:58:08 GMT"
-            );
+        );
         final Map<String, String> noHeaders = Collections.emptyMap();
         final MkContainer container = new MkGrizzlyContainer()
             .next(
                 new MkAnswer.Simple(
                     HttpURLConnection.HTTP_OK,
-                    lastModifiedHeaders.entrySet(),
+                    headers.entrySet(),
                     LastModifiedCachingWireTest.BODY.getBytes()
                 ),
-                Matchers.not(this.queryContainsIfModifiedSinceHeader)
+                Matchers.not(queryContainsIfModifiedSinceHeader())
             )
             .next(
                 new MkAnswer.Simple(
@@ -174,7 +167,7 @@ public final class LastModifiedCachingWireTest {
                     noHeaders.entrySet(),
                     LastModifiedCachingWireTest.BODY_UPDATED.getBytes()
                 ),
-                this.queryContainsIfModifiedSinceHeader
+                queryContainsIfModifiedSinceHeader()
             )
             .next(
                 new MkAnswer.Simple(
@@ -182,7 +175,7 @@ public final class LastModifiedCachingWireTest {
                     noHeaders.entrySet(),
                     LastModifiedCachingWireTest.BODY_UPDATED_2.getBytes()
                 ),
-                Matchers.not(this.queryContainsIfModifiedSinceHeader)
+                Matchers.not(queryContainsIfModifiedSinceHeader())
             ).start();
         try {
             final Request req = new JdkRequest(container.home())
@@ -297,6 +290,14 @@ public final class LastModifiedCachingWireTest {
         } finally {
             container.stop();
         }
+    }
+
+    /**
+     * A Matcher that tests for the presence of the If-Modified-Since header.
+     * @return The query matcher
+     */
+    private static Matcher<MkQuery> queryContainsIfModifiedSinceHeader() {
+        return queryContainingHeader("If-Modified-Since");
     }
 
     /**
