@@ -180,6 +180,8 @@ public abstract class AbstractHeaderBasedCachingWire implements Wire {
     private void updateCache(final Request req, final Response rsp) {
         if (rsp.headers().containsKey(this.scvh)) {
             this.cache.put(req, rsp);
+        } else {
+            this.cache.remove(req);
         }
     }
 
