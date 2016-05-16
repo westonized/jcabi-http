@@ -39,6 +39,7 @@ import com.jcabi.http.request.JdkRequest;
 import com.jcabi.http.response.RestResponse;
 import java.net.HttpURLConnection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.core.HttpHeaders;
 import org.hamcrest.MatcherAssert;
@@ -63,6 +64,11 @@ public final class LastModifiedCachingWireTest {
      * Test body updated.
      * */
     private static final String BODY_UPDATED = "Test body updated";
+
+    /**
+     * Test body updated 2.
+     * */
+    private static final String BODY_UPDATED_2 = "Test body updated 2";
 
     /**
      * LastModifiedCachingWire can handle requests without headers.
@@ -124,6 +130,65 @@ public final class LastModifiedCachingWireTest {
             MatcherAssert.assertThat(
                 container.queries(), Matchers.equalTo(Tv.TEN)
             );
+        } finally {
+            container.stop();
+        }
+    }
+
+    @Test
+    public void doesNotCacheGetRequestIfTheLastModifiedHeaderIsMissing()
+        throws Exception {
+        final Map<String, String> lastModifiedHeaders =
+            Collections.singletonMap(
+                HttpHeaders.LAST_MODIFIED,
+                "Wed, 15 Nov 1995 04:58:08 GMT"
+            );
+        final Map<String, String> noLastModifiedHeaders = new HashMap<>();
+        final MkContainer container = new MkGrizzlyContainer()
+            .next(
+                new MkAnswer.Simple(
+                    HttpURLConnection.HTTP_OK,
+                    lastModifiedHeaders.entrySet(),
+                    LastModifiedCachingWireTest.BODY.getBytes()
+                ),
+                Matchers.not(queryContainsIfModifiedSinceHeader)
+            )
+            .next(
+                new MkAnswer.Simple(
+                    HttpURLConnection.HTTP_OK,
+                    noLastModifiedHeaders.entrySet(),
+                    LastModifiedCachingWireTest.BODY_UPDATED.getBytes()
+                ),
+                queryContainsIfModifiedSinceHeader
+            )
+            .next(
+                new MkAnswer.Simple(
+                    HttpURLConnection.HTTP_OK,
+                    noLastModifiedHeaders.entrySet(),
+                    LastModifiedCachingWireTest.BODY_UPDATED_2.getBytes()
+                ),
+                Matchers.not(queryContainsIfModifiedSinceHeader)
+            ).start();
+        try {
+            final Request req = new JdkRequest(container.home())
+                .through(LastModifiedCachingWire.class);
+            req.fetch().as(RestResponse.class)
+                .assertStatus(HttpURLConnection.HTTP_OK)
+                .assertBody(
+                    Matchers.equalTo(LastModifiedCachingWireTest.BODY)
+                );
+
+            req.fetch().as(RestResponse.class)
+                .assertStatus(HttpURLConnection.HTTP_OK)
+                .assertBody(
+                    Matchers.equalTo(LastModifiedCachingWireTest.BODY_UPDATED)
+                );
+
+            req.fetch().as(RestResponse.class)
+                .assertStatus(HttpURLConnection.HTTP_OK)
+                .assertBody(
+                    Matchers.equalTo(LastModifiedCachingWireTest.BODY_UPDATED_2)
+                );
         } finally {
             container.stop();
         }
@@ -219,5 +284,33 @@ public final class LastModifiedCachingWireTest {
         } finally {
             container.stop();
         }
+    }
+
+    /**
+     * A Matcher that tests for the presence of the If-Modified-Since header.
+     */
+    private Matcher<MkQuery> queryContainsIfModifiedSinceHeader = queryContainingHeader("If-Modified-Since");
+
+    /**
+     * Provides a MkQuery matcher that tests if the request contains the specified header.
+     * @param header The header to look for
+     * @return A matcher which tests for the supplied header
+     */
+    private static Matcher<MkQuery> queryContainingHeader(final String header) {
+        return new BaseMatcher<MkQuery>() {
+            @Override
+            public boolean matches(final Object object) {
+                MkQuery q = (MkQuery) object;
+                return q.headers().containsKey(header);
+            }
+
+            @Override
+            public void describeMismatch(final Object object, final Description description) {
+            }
+
+            @Override
+            public void describeTo(final Description description) {
+            }
+        };
     }
 }
