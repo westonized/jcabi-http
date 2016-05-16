@@ -172,7 +172,9 @@ public abstract class AbstractHeaderBasedCachingWire implements Wire {
     }
 
     /**
-     * Add response to cache.
+     * Add response to cache,
+     * Update response in cache or
+     * Evict response from cache.
      * @param req The request to be used as key
      * @param rsp The response to add
      */
