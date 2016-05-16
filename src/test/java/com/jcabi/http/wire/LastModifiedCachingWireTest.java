@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.Map;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
@@ -138,15 +139,10 @@ public final class LastModifiedCachingWireTest {
     }
 
     @Test
-    public void doesNotCacheGetRequestIf() throws Exception {
+    public void doesNotCacheGetRequestIfThe() throws Exception {
         final Map<String, String> lastModifiedHeaders = Collections.singletonMap(
                 HttpHeaders.LAST_MODIFIED,
                 "Wed, 15 Nov 1995 04:58:08 GMT"
-        );
-
-        final Map<String, String> lastModifiedOlderHeaders = Collections.singletonMap(
-                HttpHeaders.LAST_MODIFIED,
-                "Wed, 15 Nov 1994 04:58:08 GMT"
         );
         final Map<String, String> noLastModifiedHeaders = Collections.EMPTY_MAP;
         final MkContainer container = new MkGrizzlyContainer()
@@ -167,14 +163,35 @@ public final class LastModifiedCachingWireTest {
                 .next(
                         new MkAnswer.Simple(
                                 HttpURLConnection.HTTP_OK,
-                                lastModifiedOlderHeaders.entrySet(),
+                                noLastModifiedHeaders.entrySet(),
                                 LastModifiedCachingWireTest.BODY_UPDATED_2.getBytes()
-                        )
+                        ),
+                        Matchers.is(new Matcher<MkQuery>() {
+                            @Override
+                            public boolean matches(Object o) {
+                                MkQuery q = (MkQuery) o;
+                                return !q.headers().containsKey("If-Modified-Since");
+                            }
+
+                            @Override
+                            public void describeMismatch(Object o, Description description) {
+
+                            }
+
+                            @Override
+                            public void _dont_implement_Matcher___instead_extend_BaseMatcher_() {
+
+                            }
+
+                            @Override
+                            public void describeTo(Description description) {
+
+                            }
+                        })
                 ).start();
         try {
             final Request req = new JdkRequest(container.home())
                     .through(LastModifiedCachingWire.class);
-
             req.fetch().as(RestResponse.class)
                     .assertStatus(HttpURLConnection.HTTP_OK)
                     .assertBody(
