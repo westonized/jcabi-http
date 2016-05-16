@@ -138,8 +138,7 @@ public abstract class AbstractHeaderBasedCachingWire implements Wire {
     }
 
     /**
-     * Check response and update cache if needed.
-     * @todo #90:30min Evict cache entry if If-Modified-Since request responded
+     * Check response and update cache or evict from cache if needed.
      *  with HTTP_OK code and no Last-Modified header.
      * @param req Request
      * @param home URI to fetch
