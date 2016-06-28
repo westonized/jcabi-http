@@ -40,8 +40,6 @@ import com.jcabi.log.Logger;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
@@ -49,7 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.zip.DeflaterOutputStream;
+import java.util.zip.GZIPInputStream;
 import javax.ws.rs.core.HttpHeaders;
 import lombok.EqualsAndHashCode;
 
@@ -136,16 +134,14 @@ public final class DefaultResponse implements Response {
      * @return
      */
     private byte[] unzip(final byte[] source) {
-        final InputStream original = new ByteArrayInputStream(source);
-        final ByteArrayOutputStream zipped = new ByteArrayOutputStream();
-        final OutputStream compressor = new DeflaterOutputStream(zipped);
         try {
-            ByteStreams.copy(original, compressor);
-            compressor.close();
-            original.close();
-            final byte[] output = zipped.toByteArray();
-            zipped.close();
-            return output;
+            final GZIPInputStream gzipInputStream = new GZIPInputStream(
+                new ByteArrayInputStream(source)
+            );
+            final ByteArrayOutputStream output = new ByteArrayOutputStream();
+            ByteStreams.copy(gzipInputStream, output);
+            gzipInputStream.close();
+            return output.toByteArray();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -46,11 +46,13 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import javax.ws.rs.core.HttpHeaders;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsAnything;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -105,10 +107,22 @@ public final class GzipBodyTest {
         final OutputStream compressor = new GZIPOutputStream(zipped);
         ByteStreams.copy(original, compressor);
         compressor.close();
-        original.close();
-        final byte[] output = zipped.toByteArray();
-        zipped.close();
-        return output;
+        return zipped.toByteArray();
+    }
+
+    private byte[] unzip(final byte[] source) throws IOException {
+        final GZIPInputStream gzipInputStream = new GZIPInputStream(
+            new ByteArrayInputStream(source)
+        );
+        final ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ByteStreams.copy(gzipInputStream, output);
+        gzipInputStream.close();
+        return output.toByteArray();
+    }
+
+    @Test
+    public void gzipunzip() throws IOException {
+        Assert.assertArrayEquals("Test".getBytes(), unzip(gzip("Test".getBytes())));
     }
 
     @Test
