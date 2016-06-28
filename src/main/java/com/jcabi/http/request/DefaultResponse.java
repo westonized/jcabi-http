@@ -29,6 +29,7 @@
  */
 package com.jcabi.http.request;
 
+import com.google.common.io.ByteStreams;
 import com.jcabi.aspects.Immutable;
 import com.jcabi.aspects.Loggable;
 import com.jcabi.http.Request;
@@ -36,6 +37,11 @@ import com.jcabi.http.RequestBody;
 import com.jcabi.http.Response;
 import com.jcabi.immutable.Array;
 import com.jcabi.log.Logger;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
@@ -43,6 +49,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.zip.DeflaterOutputStream;
+import javax.ws.rs.core.HttpHeaders;
 import lombok.EqualsAndHashCode;
 
 /**
@@ -108,7 +116,39 @@ public final class DefaultResponse implements Response {
         this.code = status;
         this.phrase = reason;
         this.hdrs = headers;
-        this.content = body.clone();
+        this.content = decode(body.clone());
+    }
+
+    /**
+     *
+     *
+     * @param clone
+     * @return
+     */
+    private byte[] decode(final byte[] clone) {
+        if(headers().get(HttpHeaders.CONTENT_ENCODING).contains("gzip"))
+            return unzip(clone);
+        return clone;
+    }
+
+    /**
+     *
+     * @return
+     */
+    private byte[] unzip(final byte[] source) {
+        final InputStream original = new ByteArrayInputStream(source);
+        final ByteArrayOutputStream zipped = new ByteArrayOutputStream();
+        final OutputStream compressor = new DeflaterOutputStream(zipped);
+        try {
+            ByteStreams.copy(original, compressor);
+            compressor.close();
+            original.close();
+            final byte[] output = zipped.toByteArray();
+            zipped.close();
+            return output;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
