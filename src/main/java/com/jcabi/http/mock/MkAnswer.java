@@ -73,6 +73,12 @@ public interface MkAnswer {
     String body();
 
     /**
+     * HTTP response body.
+     * @return The original content of the answer.
+     */
+    byte[] bodyBinary();
+
+    /**
      * Simple implementation.
      */
     @Immutable
@@ -153,6 +159,10 @@ public interface MkAnswer {
         @Override
         public String body() {
             return new String(this.content, MkAnswer.Simple.CHARSET);
+        }
+        @Override
+        public byte[] bodyBinary(){
+            return this.content;
         }
         @Override
         public String toString() {
