@@ -161,8 +161,8 @@ public interface MkAnswer {
             return new String(this.content, MkAnswer.Simple.CHARSET);
         }
         @Override
-        public byte[] content(){
-            return this.content;
+        public byte[] content() {
+            return this.content.clone();
         }
         @Override
         public String toString() {

@@ -83,7 +83,7 @@ public final class MkAnswerMatchersTest {
      */
     @Test
     public void canMatchBinaryBody() {
-        final byte[] body = getAllByteValues();
+        final byte[] body = this.getAllByteValues();
         final MkAnswer query = Mockito.mock(MkAnswer.class);
         Mockito.doReturn(body).when(query).content();
         MatcherAssert.assertThat(
@@ -118,9 +118,9 @@ public final class MkAnswerMatchersTest {
      * @return An array containing all byte values.
      */
     private byte[] getAllByteValues() {
-        byte[] bytes = new byte[255];
-        for (int i = 0; i < bytes.length; i++) {
-            bytes[i] = (byte) i;
+        final byte[] bytes = new byte[Byte.MAX_VALUE];
+        for (int index = 0; index < bytes.length; index += 1) {
+            bytes[index] = (byte) index;
         }
         return bytes;
     }
