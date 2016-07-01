@@ -29,11 +29,16 @@
  */
 package com.jcabi.http.mock;
 
+import java.net.HttpURLConnection;
 import java.util.Collections;
+import java.util.Map;
+
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import javax.ws.rs.core.HttpHeaders;
 
 /**
  * Test case for {@link MkAnswerMatchers}.
@@ -76,5 +81,36 @@ public final class MkAnswerMatchersTest {
                 Matchers.contains(value)
             )
         );
+    }
+
+    /**
+     * MkAnswerMatchers can match MkAnswer binary body.
+     */
+    @Test
+    public void canMatchBinaryBody() {
+        final byte[] body = getAllByteValues();
+        final Map<String, String> headers = Collections.emptyMap();
+        MkAnswer answer = new MkAnswer.Simple(
+                HttpURLConnection.HTTP_OK,
+                headers.entrySet(),
+                body);
+        MatcherAssert.assertThat(
+                answer,
+                MkAnswerMatchers.hasBinaryBody(
+                        Matchers.is(body)
+                )
+        );
+    }
+
+    /**
+     * Gets all 256 byte values in an array.
+     * @return An array containing all bytes values.
+     */
+    private byte[] getAllByteValues() {
+        byte[] bytes = new byte[255];
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = (byte) i;
+        }
+        return bytes;
     }
 }
