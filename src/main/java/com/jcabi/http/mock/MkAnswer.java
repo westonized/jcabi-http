@@ -76,7 +76,7 @@ public interface MkAnswer {
      * HTTP response body.
      * @return The original content of the answer.
      */
-    byte[] bodyBinary();
+    byte[] content();
 
     /**
      * Simple implementation.
@@ -161,7 +161,7 @@ public interface MkAnswer {
             return new String(this.content, MkAnswer.Simple.CHARSET);
         }
         @Override
-        public byte[] bodyBinary(){
+        public byte[] content(){
             return this.content;
         }
         @Override

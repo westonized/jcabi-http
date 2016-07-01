@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2015, jcabi.com
+ * Copyright (c) 2012-2015, jcabi.com
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,43 +29,40 @@
  */
 package com.jcabi.http.mock;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
+import java.net.HttpURLConnection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * Matcher for checking {@link MkAnswer#body()} result.
+ * Test case for {@link MkAnswer.Simple}.
  * @author Alan Evans (thealanevans@gmail.com)
  * @version $Id$
  */
-@ToString
-@EqualsAndHashCode(callSuper = false, of = "matcher")
-final class MkAnswerBinaryBodyMatcher extends TypeSafeMatcher<MkAnswer> {
-    /**
-     * The Matcher to use against the body.
-     */
-    private final transient Matcher<byte[]> matcher;
+public final class MkAnswerSimpleTest {
 
     /**
-     * Ctor.
-     * @param match The matcher to use for the body
+     * MkAnswer.Simple can return the content as a clone.
      */
-    MkAnswerBinaryBodyMatcher(final Matcher<byte[]> match) {
-        super();
-        this.matcher = match;
-    }
-
-    @Override
-    public void describeTo(final Description description) {
-        this.matcher.describeTo(
-            description.appendText("MkAnswer binary body matching: ")
+    @Test
+    public void contentIsCloned() {
+        final byte[] body = new byte[]{1, 2, 3};
+        MkAnswer answer = new MkAnswer.Simple(
+            HttpURLConnection.HTTP_OK,
+            getEmptyHeaders(),
+            body
         );
+        Assert.assertArrayEquals(body, answer.content());
+        Assert.assertNotSame(body, answer.content());
     }
 
-    @Override
-    public boolean matchesSafely(final MkAnswer item) {
-        return this.matcher.matches(item.bodyBinary());
+    /**
+     * Gets a set of empty headers.
+     * @return An empty header set.
+     */
+    private Set<Map.Entry<String, String>> getEmptyHeaders() {
+        return Collections.<String, String>emptyMap().entrySet();
     }
 }

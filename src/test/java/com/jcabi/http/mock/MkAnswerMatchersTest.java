@@ -29,16 +29,11 @@
  */
 package com.jcabi.http.mock;
 
-import java.net.HttpURLConnection;
 import java.util.Collections;
-import java.util.Map;
-
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.mockito.Mockito;
-
-import javax.ws.rs.core.HttpHeaders;
 
 /**
  * Test case for {@link MkAnswerMatchers}.
@@ -89,22 +84,38 @@ public final class MkAnswerMatchersTest {
     @Test
     public void canMatchBinaryBody() {
         final byte[] body = getAllByteValues();
-        final Map<String, String> headers = Collections.emptyMap();
-        MkAnswer answer = new MkAnswer.Simple(
-                HttpURLConnection.HTTP_OK,
-                headers.entrySet(),
-                body);
+        final MkAnswer query = Mockito.mock(MkAnswer.class);
+        Mockito.doReturn(body).when(query).content();
         MatcherAssert.assertThat(
-                answer,
-                MkAnswerMatchers.hasBinaryBody(
-                        Matchers.is(body)
+            query,
+            MkAnswerMatchers.hasContent(
+                Matchers.is(body)
+            )
+        );
+    }
+
+    /**
+     * MkAnswerMatchers can match MkAnswer binary body.
+     */
+    @Test
+    public void canNotMatchBinaryBody() {
+        final byte[] body = new byte[]{0};
+        final MkAnswer query = Mockito.mock(MkAnswer.class);
+        Mockito.doReturn(body).when(query).content();
+        final byte[] mismatch = new byte[]{1};
+        MatcherAssert.assertThat(
+            query,
+            Matchers.not(
+                MkAnswerMatchers.hasContent(
+                    Matchers.is(mismatch)
                 )
+            )
         );
     }
 
     /**
      * Gets all 256 byte values in an array.
-     * @return An array containing all bytes values.
+     * @return An array containing all byte values.
      */
     private byte[] getAllByteValues() {
         byte[] bytes = new byte[255];
